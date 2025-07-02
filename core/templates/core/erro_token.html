@@ -1,0 +1,8 @@
+{% extends 'core/base.html' %} {% block title %}Erro com o Token{% endblock %}
+{% block content %}
+<div class="alert alert-danger">
+  <h5>Erro ao processar o token</h5>
+  <p>{{ mensagem }}</p>
+  <a href="/" class="btn btn-primary">Voltar</a>
+</div>
+{% endblock %}

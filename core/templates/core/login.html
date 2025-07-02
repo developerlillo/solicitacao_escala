@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<h4>Login</h4>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-danger">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="mb-3">
+    <label for="username">Email</label>
+    <input type="text" class="form-control" name="username" required />
+  </div>
+
+  <div class="mb-3">
+    <label for="senha">Senha</label>
+    <input type="password" class="form-control" name="senha" required />
+  </div>
+
+  <button type="submit" class="btn btn-primary">Entrar</button>
+</form>
+
+{% endblock %}

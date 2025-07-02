@@ -1,0 +1,48 @@
+# Byte-compiled / cache / logs
+__pycache__/
+*.py[cod]
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Virtual environment
+venv/
+env/
+ENV/
+*.env
+
+# VS Code
+.vscode/
+.idea/
+*.code-workspace
+
+# Django static/media (em dev)
+staticfiles/
+media/
+
+# Arquivos temporários
+*.bak
+*.swp
+*.swo
+*~
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de build/test
+coverage/
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.mypy_cache/
+.pyre/
+
+# Migrations — manter os arquivos de migração, mas ignorar cache
+**/migrations/__pycache__/
+**/migrations/*.pyc

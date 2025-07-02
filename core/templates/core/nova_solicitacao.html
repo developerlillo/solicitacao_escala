@@ -1,0 +1,8 @@
+{% extends 'core/base.html' %} {% block title %}Nova Solicitação{% endblock %}
+{% block content %}
+<form method="post">
+  {% csrf_token %} {{ form.as_p }}
+  <button type="submit" class="btn btn-success">Salvar</button>
+  <a href="{% url 'listar_solicitacoes' %}" class="btn btn-secondary">Voltar</a>
+</form>
+{% endblock %}

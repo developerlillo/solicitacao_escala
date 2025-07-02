@@ -1,0 +1,33 @@
+{% extends 'core/base.html' %} 
+{% block title %}Lista de Solicitações{% endblock%} 
+{% block content %}
+<a href="{% url 'nova_solicitacao' %}" class="btn btn-primary mb-3"
+  >Nova Solicitação</a
+>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Cliente</th>
+      <th>Fornecedor</th>
+      <th>Período</th>
+      <th>Tipo Profissional</th>
+      <th>Jornada</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in solicitacoes %}
+    <tr>
+      <td>{{ s.cliente.nome }}</td>
+      <td>{{ s.fornecedor.nome }}</td>
+      <td>{{ s.data_inicio }} a {{ s.data_fim }}</td>
+      <td>{{ s.tipo_profissional }}</td>
+      <td>{{ s.jornada }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5">Nenhuma solicitação cadastrada.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
