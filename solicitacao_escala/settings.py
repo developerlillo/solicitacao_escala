@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from typing import List, Dict, Any
 import os
 from pathlib import Path
 
@@ -53,7 +54,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "solicitacao_escala.urls"
 
-TEMPLATES = [
+
+TEMPLATES: List[Dict[str, Any]] = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [os.path.join(BASE_DIR, "core", "templates")],

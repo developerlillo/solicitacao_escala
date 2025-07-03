@@ -2,7 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class Fornecedor(models.Model):
+class Fornecedor(
+    models.Model
+):  # armazena informações sobre os fornecedores, que são empresas que oferecem serviços para o cliente
+    id = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
     cnpj = models.CharField(max_length=18)
     email = models.EmailField()
@@ -12,7 +15,10 @@ class Fornecedor(models.Model):
         return self.nome
 
 
-class Cliente(models.Model):
+class Cliente(
+    models.Model
+):  # armazena informações sobre o cliente, terá apenas um registro
+    id = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
     cnpj = models.CharField(max_length=18)
     email = models.EmailField()

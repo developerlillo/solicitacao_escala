@@ -1,10 +1,14 @@
+from typing import Any
 import requests
 
 from core.models import Cliente, Fornecedor, TokenSolicitacao, Usuario
 from solicitacao_escala import settings
+from django import forms
+
+BASE_URL = settings.GERENCIAMENTO_ESCALA_API_URL + "solicitacao-token"
 
 
-def validar_token(token):
+def validar_token(token: str) -> Any | None:
     try:
         response = requests.get(f"{BASE_URL}/validar/{token}")
         if response.status_code == 200:
@@ -15,7 +19,7 @@ def validar_token(token):
         return None
 
 
-def marcar_token_utilizado(token):
+def marcar_token_utilizado(token: str) -> bool:
     try:
         response = requests.post(f"{BASE_URL}/utilizar", json={"token": token})
         return response.status_code == 200
@@ -24,7 +28,7 @@ def marcar_token_utilizado(token):
         return False
 
 
-def criar_usuario(form):
+def criar_usuario(form: forms.ModelForm) -> tuple[Any, Usuario]:
     email = form.cleaned_data["email"]
     nome = form.cleaned_data["nome_completo"]
 
@@ -37,7 +41,7 @@ def criar_usuario(form):
     return user, usuario
 
 
-def associar_token(usuario, token_str):
+def associar_token(usuario: Usuario, token_str: str) -> bool:
     base_url = settings.GERENCIAMENTO_ESCALA_API_URL
 
     # 1. VALIDAR TOKEN
@@ -67,7 +71,7 @@ def associar_token(usuario, token_str):
 
     # 4. SALVAR/ATUALIZAR CLIENTE (cliFornec dentro de contratoCliente)
     cli = dados_token["contratoCliente"]["cliFornec"]
-    cliente, _ = Cliente.objects.update_or_create(
+    Cliente.objects.update_or_create(
         cnpj=cli["cnpj"],
         defaults={
             "nome": cli["razaoSocial"],
