@@ -10,16 +10,10 @@ class SolicitacaoForm(forms.ModelForm):
         fields = [
             "cliente",
             "fornecedor",
-            "data_inicio",
-            "data_fim",
             "tipo_profissional",
             "jornada",
             "observacoes",
         ]
-        widgets = {
-            "data_inicio": forms.DateInput(attrs={"type": "date"}),
-            "data_fim": forms.DateInput(attrs={"type": "date"}),
-        }
 
 
 class UsuarioCadastroForm(UserCreationForm):

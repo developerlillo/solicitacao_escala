@@ -1,20 +1,25 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponsePermanentRedirect,
+    HttpResponseRedirect,
+)
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import login
-from .models import Solicitacao, TokenSolicitacao, Usuario
+from .models import Solicitacao, Usuario
 from .forms import AdicionarTokenForm, SolicitacaoForm, UsuarioCadastroForm
-from .services.token_service import (
-    validar_token,
-    marcar_token_utilizado,
-    criar_usuario,
-    associar_token,
-)
+from .services.token_service import associar_token
+from .services.usuario_service import criar_usuario
+from .services.solicitacao_service import salvar_solicitacao
 
 
-def login_usuario(request):
+def login_usuario(
+    request: HttpRequest,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     if request.method == "POST":
         username = request.POST.get("username")
         senha = request.POST.get("senha")
@@ -30,22 +35,26 @@ def login_usuario(request):
 
 
 @login_required(login_url="login")
-def logout_usuario(request):
+def logout_usuario(
+    request: HttpRequest,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
     logout(request)
     return redirect("login")
 
 
 @login_required(login_url="login")
-def listar_solicitacoes(request):
+def listar_solicitacoes(
+    request: HttpRequest,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     if not request.user.is_authenticated:
         return redirect("ativar_conta")
 
     try:
-        tokens = request.user.perfil.tokens.all()
+        tokens = request.user.perfil.tokens.all()  # type: ignore
     except Exception:
         tokens = []
 
-    fornecedores_ids = [t.empresa_id for t in tokens]
+    fornecedores_ids = [t.empresa_id for t in tokens]  # type: ignore
 
     solicitacoes = Solicitacao.objects.select_related("cliente", "fornecedor").filter(
         fornecedor__id__in=fornecedores_ids
@@ -56,93 +65,38 @@ def listar_solicitacoes(request):
     )
 
 
+# @login_required(login_url="login")
+# def nova_solicitacao(
+#     request: HttpRequest,
+# ) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
+#     if request.method == "POST":
+#         form = SolicitacaoForm(request.POST)
+#         if form.is_valid():
+#             form.save()
+#             return redirect("listar_solicitacoes")
+#     else:
+#         form = SolicitacaoForm()
+#     return render(request, "core/nova_solicitacao.html", {"form": form})
+
+
 @login_required(login_url="login")
-def nova_solicitacao(request):
+def nova_solicitacao(
+    request: HttpRequest,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     if request.method == "POST":
         form = SolicitacaoForm(request.POST)
         if form.is_valid():
-            form.save()
+            usuario: Usuario = request.user.perfil  # type: ignore
+            salvar_solicitacao(form, usuario)  # type: ignore
             return redirect("listar_solicitacoes")
     else:
         form = SolicitacaoForm()
     return render(request, "core/nova_solicitacao.html", {"form": form})
 
 
-def ativar_conta(request):
-    token = request.GET.get("token")
-    if not token:
-        return render(
-            request, "core/erro_token.html", {"mensagem": "Token não informado."}
-        )
-
-    dados_token = validar_token(token)
-    if not dados_token:
-        return render(
-            request,
-            "core/erro_token.html",
-            {"mensagem": "Token inválido ou já utilizado."},
-        )
-
-    email = dados_token["emailCliente"]
-
-    if request.method == "POST":
-        senha = request.POST.get("senha")
-        confirmar = request.POST.get("confirmar")
-
-        if senha != confirmar:
-            return render(
-                request,
-                "core/form_criacao_usuario.html",
-                {"erro": "Senhas não conferem", "email": email, "token": token},
-            )
-
-        try:
-            # Cria ou recupera o usuário Django
-            user, criado = User.objects.get_or_create(
-                username=email, defaults={"email": email}
-            )
-            if criado:
-                user.set_password(senha)
-                user.save()
-
-            # Cria ou recupera perfil associado
-            usuario, _ = Usuario.objects.get_or_create(
-                user=user, defaults={"nome_completo": email}
-            )
-
-            # Cria vínculo com fornecedor/token
-            TokenSolicitacao.objects.get_or_create(
-                usuario=usuario,
-                token=token,
-                defaults={
-                    "email_cliente": email,
-                    "empresa_id": dados_token["empresaContratante"]["id"],
-                    "contrato_id": dados_token["contratoCliente"]["id"],
-                    "utilizado": True,
-                },
-            )
-
-            login(request, user)
-            marcar_token_utilizado(token)
-            return redirect("listar_solicitacoes")
-
-        except Exception as e:
-            return render(
-                request,
-                "core/form_criacao_usuario.html",
-                {
-                    "erro": f"Erro ao criar usuário: {str(e)}",
-                    "email": email,
-                    "token": token,
-                },
-            )
-
-    return render(
-        request, "core/form_criacao_usuario.html", {"email": email, "token": token}
-    )
-
-
-def cadastro_usuario(request):
+def cadastro_usuario(
+    request: HttpRequest,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     if request.method == "POST":
         form = UsuarioCadastroForm(request.POST)
         if form.is_valid():
@@ -150,6 +104,7 @@ def cadastro_usuario(request):
             senha = form.cleaned_data["password1"]
             token_str = form.cleaned_data["token"]
             nome = form.cleaned_data.get("nome_completo")
+            print(nome)  # Para depuração, remova em produção
 
             # 🔍 Verifica se usuário já existe
             user_exists = User.objects.filter(username=email).exists()
@@ -183,7 +138,9 @@ def cadastro_usuario(request):
     return render(request, "core/cadastro.html", {"form": form})
 
 
-def adicionar_token(request):
+def adicionar_token(
+    request: HttpRequest,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     if request.method == "POST":
         form = AdicionarTokenForm(request.POST)
         if form.is_valid():
@@ -193,7 +150,7 @@ def adicionar_token(request):
 
             user = authenticate(request, username=email, password=senha)
             if user:
-                usuario = user.perfil  # obtém o perfil relacionado
+                usuario = Usuario.objects.get(user=user)
 
                 sucesso = associar_token(usuario, token_str)
                 if sucesso:

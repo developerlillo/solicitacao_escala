@@ -3,7 +3,6 @@ import requests
 
 from core.models import Cliente, Fornecedor, TokenSolicitacao, Usuario
 from solicitacao_escala import settings
-from django import forms
 
 BASE_URL = settings.GERENCIAMENTO_ESCALA_API_URL + "solicitacao-token"
 
@@ -17,28 +16,6 @@ def validar_token(token: str) -> Any | None:
     except Exception as e:
         print("Erro ao validar token:", e)
         return None
-
-
-def marcar_token_utilizado(token: str) -> bool:
-    try:
-        response = requests.post(f"{BASE_URL}/utilizar", json={"token": token})
-        return response.status_code == 200
-    except Exception as e:
-        print("Erro ao marcar token como utilizado:", e)
-        return False
-
-
-def criar_usuario(form: forms.ModelForm) -> tuple[Any, Usuario]:
-    email = form.cleaned_data["email"]
-    nome = form.cleaned_data["nome_completo"]
-
-    user = form.save(commit=False)
-    user.email = email
-    user.username = email  # força username = email
-    user.save()
-
-    usuario = Usuario.objects.create(user=user, nome_completo=nome)
-    return user, usuario
 
 
 def associar_token(usuario: Usuario, token_str: str) -> bool:

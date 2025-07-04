@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+# (Empresa no gerenciamento de escala)
 class Fornecedor(
     models.Model
 ):  # armazena informações sobre os fornecedores, que são empresas que oferecem serviços para o cliente
@@ -15,6 +16,7 @@ class Fornecedor(
         return self.nome
 
 
+# (CliFornec no gerenciamento de escala)
 class Cliente(
     models.Model
 ):  # armazena informações sobre o cliente, terá apenas um registro
@@ -28,20 +30,6 @@ class Cliente(
         return self.nome
 
 
-class Solicitacao(models.Model):
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    fornecedor = models.ForeignKey(Fornecedor, on_delete=models.CASCADE)
-    data_solicitacao = models.DateTimeField(auto_now_add=True)
-    data_inicio = models.DateField()
-    data_fim = models.DateField()
-    tipo_profissional = models.CharField(max_length=100)
-    jornada = models.CharField(max_length=100)
-    observacoes = models.TextField(blank=True)
-
-    def __str__(self):
-        return f"Solicitação de {self.cliente.nome} para {self.fornecedor.nome}"
-
-
 class Usuario(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="perfil")
     nome_completo = models.CharField(max_length=100)
@@ -50,16 +38,42 @@ class Usuario(models.Model):
         return self.nome_completo
 
 
+# (ContratoCapa no gerenciamento de escala)
+class Contrato(models.Model):
+    id = models.AutoField(primary_key=True)
+    numero = models.CharField(max_length=100)
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    fornecedor = models.ForeignKey(Fornecedor, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Contrato {self.numero} - {self.cliente.nome} x {self.fornecedor.nome}"
+
+
+# (SolicitacaoToken no gerenciamento de escala)
 class TokenSolicitacao(models.Model):
     usuario = models.ForeignKey(
         Usuario, on_delete=models.CASCADE, related_name="tokens"
     )
-    email_cliente = models.EmailField()
     token = models.CharField(max_length=64, unique=True)
-    empresa_id = models.IntegerField()
-    utilizado = models.BooleanField(default=False)  # já está associado ao usuário
-    contrato_id = models.IntegerField()
+    contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE)
+    utilizado = models.BooleanField(default=False)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.usuario} - Token {self.token[:8]}..."
+
+
+# (Solicitacao no gerenciamento de escala)
+class Solicitacao(models.Model):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    fornecedor = models.ForeignKey(Fornecedor, on_delete=models.CASCADE)
+    contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE)
+    usuario_solicitante = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+
+    data_solicitacao = models.DateTimeField(auto_now_add=True)
+    tipo_profissional = models.CharField(max_length=100)
+    jornada = models.CharField(max_length=100)
+    observacoes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Solicitação de {self.cliente.nome} para {self.fornecedor.nome}"
