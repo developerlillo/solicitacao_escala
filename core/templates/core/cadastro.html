@@ -1,72 +1,61 @@
 {% extends 'core/base.html' %}
+{% load form_extras %}
 {% block title %}Cadastro de Usuário{% endblock %}
 {% block content %}
 
 <h4>Cadastro</h4>
 
-{% if erro %}
-  <div class="alert alert-danger">{{ erro }}</div>
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
 {% endif %}
 
 <form method="post">
   {% csrf_token %}
 
-  {# Campo nome_completo só aparece se estiver no form #}
-  {% if form.nome_completo %}
-    <div class="mb-3">
-      {{ form.nome_completo.label_tag }}
-      {{ form.nome_completo }}
-      {% for error in form.nome_completo.errors %}
-        <div class="text-danger">{{ error }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
-
   <div class="mb-3">
-    {{ form.username.label_tag }}
-    {{ form.username }}
-    {% for error in form.username.errors %}
+    {{ form.nome_completo.label_tag }}
+    {{ form.nome_completo|add_class:"form-control" }}
+    {% for error in form.nome_completo.errors %}
       <div class="text-danger">{{ error }}</div>
     {% endfor %}
   </div>
 
   <div class="mb-3">
     {{ form.email.label_tag }}
-    {{ form.email }}
+    {{ form.email|add_class:"form-control" }}
     {% for error in form.email.errors %}
       <div class="text-danger">{{ error }}</div>
     {% endfor %}
   </div>
 
-  {% if form.password1 %}
-    <div class="mb-3">
-      {{ form.password1.label_tag }}
-      {{ form.password1 }}
-      {% for error in form.password1.errors %}
-        <div class="text-danger">{{ error }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
+  <div class="mb-3">
+    {{ form.password1.label_tag }}
+    {{ form.password1|add_class:"form-control" }}
+    {% for error in form.password1.errors %}
+      <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+  </div>
 
-  {% if form.password2 %}
-    <div class="mb-3">
-      {{ form.password2.label_tag }}
-      {{ form.password2 }}
-      {% for error in form.password2.errors %}
-        <div class="text-danger">{{ error }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
+  <div class="mb-3">
+    {{ form.password2.label_tag }}
+    {{ form.password2|add_class:"form-control" }}
+    {% for error in form.password2.errors %}
+      <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+  </div>
 
   <div class="mb-3">
     {{ form.token.label_tag }}
-    {{ form.token }}
+    {{ form.token|add_class:"form-control" }}
     {% for error in form.token.errors %}
       <div class="text-danger">{{ error }}</div>
     {% endfor %}
   </div>
 
   <button type="submit" class="btn btn-primary">Cadastrar</button>
+  <a href="{% url 'login' %}" class="btn btn-outline-secondary ms-2">Já tenho conta</a>
 </form>
 
 {% endblock %}

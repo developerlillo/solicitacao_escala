@@ -17,8 +17,9 @@ class SolicitacaoForm(forms.ModelForm):
 
 
 class UsuarioCadastroForm(UserCreationForm):
+    email = forms.EmailField(required=True, label="Email")
     token = forms.CharField(
-        required=False, help_text="Informe o token recebido (opcional)"
+        required=True, help_text="Informe o token recebido"
     )
     nome_completo = forms.CharField(required=True, label="Nome Completo")
 
@@ -31,6 +32,13 @@ class UsuarioCadastroForm(UserCreationForm):
             "password2",
             "token",
         ]
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email and User.objects.filter(email=email).exists():
+            # Allow existing users to re-use their email for token association
+            pass
+        return email
 
 
 class AdicionarTokenForm(forms.Form):

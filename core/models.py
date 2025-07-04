@@ -55,6 +55,8 @@ class TokenSolicitacao(models.Model):
         Usuario, on_delete=models.CASCADE, related_name="tokens"
     )
     token = models.CharField(max_length=64, unique=True)
+    email_cliente = models.EmailField(blank=True)
+    empresa = models.ForeignKey(Fornecedor, on_delete=models.CASCADE, null=True, blank=True)
     contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE)
     utilizado = models.BooleanField(default=False)
     criado_em = models.DateTimeField(auto_now_add=True)

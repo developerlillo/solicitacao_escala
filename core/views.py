@@ -9,7 +9,6 @@ from django.http import (
 )
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-from django.contrib.auth import login
 from .models import Solicitacao, Usuario
 from .forms import AdicionarTokenForm, SolicitacaoForm, UsuarioCadastroForm
 from .services.token_service import associar_token
@@ -86,9 +85,15 @@ def nova_solicitacao(
     if request.method == "POST":
         form = SolicitacaoForm(request.POST)
         if form.is_valid():
-            usuario: Usuario = request.user.perfil  # type: ignore
-            salvar_solicitacao(form, usuario)  # type: ignore
-            return redirect("listar_solicitacoes")
+            try:
+                usuario: Usuario = request.user.perfil  # type: ignore
+                salvar_solicitacao(form, usuario)  # type: ignore
+                messages.success(request, "Solicitação criada com sucesso!")
+                return redirect("listar_solicitacoes")
+            except ValueError as e:
+                messages.error(request, str(e))
+            except Exception as e:
+                messages.error(request, f"Erro ao criar solicitação: {str(e)}")
     else:
         form = SolicitacaoForm()
     return render(request, "core/nova_solicitacao.html", {"form": form})
@@ -104,7 +109,6 @@ def cadastro_usuario(
             senha = form.cleaned_data["password1"]
             token_str = form.cleaned_data["token"]
             nome = form.cleaned_data.get("nome_completo")
-            print(nome)  # Para depuração, remova em produção
 
             # 🔍 Verifica se usuário já existe
             user_exists = User.objects.filter(username=email).exists()
@@ -113,24 +117,32 @@ def cadastro_usuario(
                 user = authenticate(username=email, password=senha)
                 if user:
                     usuario = Usuario.objects.get(user=user)
-                    associar_token(usuario, token_str)
-                    login(request, user)
-                    return redirect("listar_solicitacoes")
+                    sucesso = associar_token(usuario, token_str)
+                    if sucesso:
+                        login(request, user)
+                        messages.success(request, "Token associado com sucesso!")
+                        return redirect("listar_solicitacoes")
+                    else:
+                        messages.error(request, "Token inválido ou já utilizado.")
                 else:
                     messages.error(
                         request, "Credenciais inválidas para usuário existente."
                     )
-            if not user_exists:
-                # Cria novo usuário
-                user, usuario = criar_usuario(form)
-                associar_token(usuario, token_str)
-                login(request, user)
-                return redirect("listar_solicitacoes")
             else:
-                messages.error(
-                    request, "Usuário já cadastrado. Faça login para continuar."
-                )
-                return redirect("login")
+                # Cria novo usuário
+                try:
+                    user, usuario = criar_usuario(form)
+                    sucesso = associar_token(usuario, token_str)
+                    if sucesso:
+                        login(request, user)
+                        messages.success(request, "Usuário cadastrado com sucesso!")
+                        return redirect("listar_solicitacoes")
+                    else:
+                        # Remove o usuário criado se o token for inválido
+                        user.delete()
+                        messages.error(request, "Token inválido. Usuário não foi criado.")
+                except Exception as e:
+                    messages.error(request, f"Erro ao criar usuário: {str(e)}")
 
     else:
         form = UsuarioCadastroForm()
