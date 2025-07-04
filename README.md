@@ -51,13 +51,28 @@ pip install -r requirements.txt
 
 ### 4. Configure o arquivo `.env` (opcional)
 
-Se você quiser esconder configurações sensíveis como a URL do sistema de escala:
+**⚠️ Importante para produção**: Crie um arquivo `.env` na raiz do projeto para configurar variáveis sensíveis:
 
 ```env
+# Configurações de Segurança
+SECRET_KEY=sua-chave-secreta-super-complexa-aqui
+DEBUG=False
+
+# Configurações de Banco de Dados (Produção)
+DB_NAME=solicitacao_db
+DB_USER=postgres
+DB_PASSWORD=sua-senha-db
+DB_HOST=localhost
+DB_PORT=5432
+
+# API Externa
 GERENCIAMENTO_ESCALA_API_URL=http://localhost:8080/api/v1/
+
+# Hosts permitidos (separados por vírgula)
+ALLOWED_HOSTS=localhost,127.0.0.1,seu-dominio.com
 ```
 
-Ou configure diretamente no `settings.py`.
+**Para desenvolvimento**, o sistema usará SQLite automaticamente e não requer configuração adicional.
 
 ### 5. Crie e aplique as migrations
 
@@ -120,6 +135,35 @@ python manage.py loaddata dados.json
 ```bash
 python manage.py shell
 ```
+
+### Executar testes
+
+```bash
+python manage.py test
+```
+
+---
+
+## 🔧 Melhorias Implementadas
+
+Este projeto passou por uma revisão completa para corrigir problemas e implementar melhorias:
+
+### ✅ Correções Críticas
+- **Lógica de cadastro corrigida**: Fluxo de registro de usuários funcionando corretamente
+- **Configurações de segurança**: Variáveis sensíveis movidas para environment variables
+- **Tratamento de erros**: Adicionado logging e tratamento adequado de exceções
+- **Relacionamentos de modelos**: Corrigidos relacionamentos entre TokenSolicitacao e outras entidades
+
+### ✅ Melhorias de Qualidade
+- **Configuração de banco flexível**: SQLite para desenvolvimento, PostgreSQL para produção
+- **Templates consolidados**: Removidos templates duplicados
+- **Testes abrangentes**: Adicionados testes unitários e de integração
+- **Logging configurado**: Sistema de logs para debugging e monitoramento
+
+### ✅ Funcionalidades
+- **Interface atualizada**: Forms com melhor UX e validação
+- **Navegação melhorada**: Links e redirecionamentos consistentes
+- **Mensagens de feedback**: Confirmações e erros exibidos adequadamente
 
 ---
 
